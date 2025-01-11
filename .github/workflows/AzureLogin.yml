@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Azure_Login
+name: Azure_Login_and_Deploy_AKS
 
 # Controls when the workflow will run
 on:
@@ -17,13 +17,14 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4   
+      - uses: actions/checkout@v4
+
       - name: Azure Login
         uses: Azure/login@v2.2.0
         with:
-          creds: ${{ secrets.AZURE_CRED }} # Reference to a GitHub secret
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
           enable-AzPSSession: true
           environment: azurecloud
           allow-no-subscriptions: true
-
-         
