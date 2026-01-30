@@ -4,7 +4,7 @@ param dnsPrefix string = 'demoaksdns'
 param nodeCount int = 1
 param vmSize string = 'Standard_D2s_v3' // 2 CPU, 4GB
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-01-02-preview' = {
+resource aks 'resource aks 'Microsoft.ContainerService/managedClusters@2024-05-01' = {
   name: aksName
   location: location
   identity: {
