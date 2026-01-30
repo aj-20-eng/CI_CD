@@ -1,3 +1,5 @@
+## 🚀 Demo Commands
+
 📘 AI Application Deployment on AKS using GitHub CI/CD, Docker & ACR
 📌 Overview
 
