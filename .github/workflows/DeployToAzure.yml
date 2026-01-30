@@ -63,5 +63,4 @@ jobs:
           --resource-group ${{ github.event.inputs.rgName }} \
           --template-file AKS/aks.bicep \
           --parameters aksName=${{ github.event.inputs.aksName }} \
-                      location=${{ github.event.inputs.location }} \
-                      rgName=${{ github.event.inputs.rgName }}
+                      location=${{ github.event.inputs.location }} 
