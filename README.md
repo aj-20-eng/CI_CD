@@ -27,6 +27,8 @@ Developer Laptop → Docker Build → Azure Container Registry (ACR)
 🚀 Step 1: Verify Azure Login & Subscription
 az account show
 
+az login --use-device-code
+
 
 Purpose: Confirms Azure tenant and subscription context.
 
@@ -50,6 +52,8 @@ Purpose: Authenticates Docker client with ACR using Azure AD (no credentials sto
 
 🚀 Step 5: Tag Local Docker Image
 
+Docker images
+
 Local image name: ai-chat-ui:v1
 
 docker tag ai-chat-ui:v1 myplatformacr123.azurecr.io/ai-chat-ui:v1
@@ -58,7 +62,7 @@ docker tag ai-chat-ui:v1 myplatformacr123.azurecr.io/ai-chat-ui:v1
 Purpose: Tags the local Docker image with ACR registry path.
 
 🚀 Step 6: Push Docker Image to ACR
-docker push myplatformacr123.azurecr.io/ai-chat-ui:v1
+docker push myplatformacr123.azurecr.io/ai-chat-app:v1
 
 
 Purpose: Uploads the AI application container image to ACR.
@@ -139,6 +143,49 @@ Kubernetes provides scalable orchestration
 CI/CD automates delivery pipelines
 
 Managed Identity improves security posture
+
+Demo all Commands
+
+# 1. Login to Azure using device code
+az login --use-device-code
+
+# 2. Navigate to project folder
+cd C:\Platform_Demo\ai-chat-demo\
+ls
+docker images
+
+# 3. Connect AKS cluster
+az aks get-credentials --resource-group rg-aks-demo --name demo-aks-poc1 --overwrite-existing
+
+# 4. Login to ACR
+az acr login --name myplatformacr123
+
+# 5. Push image to ACR
+docker push myplatformacr123.azurecr.io/ai-chat-app:v1
+
+# 6. Verify image in ACR
+az acr repository list --name myplatformacr123 -o table
+
+# 7. Attach ACR to AKS (so AKS can pull images)
+az aks update --resource-group rg-aks-demo --name demo-aks-poc1 --attach-acr myplatformacr123
+
+# 8. Deploy application
+kubectl apply -f ui-deployment.yml
+
+# 9. Switch to AKS folder
+cd C:\Platform_Demo\ai-chat-demo\AKS\
+
+# 10. Reapply deployment (if needed)
+kubectl apply -f ui-deployment.yml
+
+# 11. Expose service
+kubectl apply -f ui-service.yml
+
+# 12. Get external IP to access the bot
+kubectl get service ui-service
+
+
+
 
 👨‍💻 Author
 
