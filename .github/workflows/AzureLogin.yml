@@ -1,30 +1,36 @@
-# This is a basic workflow to help you get started with Actions
+name: OIDC Login Test
 
-name: Azure_Login
-
-# Controls when the workflow will run
 on:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  workflow_dispatch:   # manual run button
+  push:
+    branches: [ "main" ]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_CLIENT_ID: "535791e2-810d-4282-9306-5c766dc8ede3"
+  AZURE_TENANT_ID: "4a9d889e-4601-47a2-b372-45d4a2ea8d05"
+  AZURE_SUBSCRIPTION_ID: "4a9d889e-4601-47a2-b372-45d4a2ea8d05"
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  login-test:
     runs-on: ubuntu-latest
+    environment: prod   # MUST match Entra federated credential
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: Azure/login@v2.2.0
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-          enable-AzPSSession: true
-          environment: azurecloud
-          allow-no-subscriptions: true
+    - name: Azure Login using OIDC
+      uses: azure/login@v2
+      with:
+        client-id: ${{ env.AZURE_CLIENT_ID }}
+        tenant-id: ${{ env.AZURE_TENANT_ID }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Show Azure Account
+      run: |
+        az account show
+        az group list
