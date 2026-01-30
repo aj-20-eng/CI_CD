@@ -1,10 +1,10 @@
+param aksName string
 param location string = 'eastus'
-param aksName string = 'demo-aks-poc1'
 param dnsPrefix string = 'demoaksdns'
 param nodeCount int = 1
-param vmSize string = 'Standard_D2s_v3' // 2 CPU, 4GB
+param vmSize string = 'Standard_D4ds_v4'
 
-resource aks 'resource aks 'Microsoft.ContainerService/managedClusters@2024-05-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2024-05-01' = {
   name: aksName
   location: location
   identity: {
@@ -12,16 +12,18 @@ resource aks 'resource aks 'Microsoft.ContainerService/managedClusters@2024-05-0
   }
   properties: {
     dnsPrefix: dnsPrefix
+    enableRBAC: true
 
     agentPoolProfiles: [
       {
-        name: 'nodepool1'
+        name: 'systempool'
+        mode: 'System'
         count: nodeCount
         vmSize: vmSize
         osType: 'Linux'
-        mode: 'System'
-        enableAutoScaling: false
+        osSKU: 'Ubuntu'
         type: 'VirtualMachineScaleSets'
+        enableAutoScaling: false
       }
     ]
 
@@ -29,10 +31,6 @@ resource aks 'resource aks 'Microsoft.ContainerService/managedClusters@2024-05-0
       networkPlugin: 'azure'
       loadBalancerSku: 'standard'
       outboundType: 'loadBalancer'
-    }
-
-    apiServerAccessProfile: {
-      enablePrivateCluster: false
     }
   }
 }

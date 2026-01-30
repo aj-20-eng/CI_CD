@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.40.2.10011",
+      "templateHash": "18160552583846425449"
+    }
+  },
+  "parameters": {
+    "aksName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus"
+    },
+    "dnsPrefix": {
+      "type": "string",
+      "defaultValue": "demoaksdns"
+    },
+    "nodeCount": {
+      "type": "int",
+      "defaultValue": 1
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D4ds_v4"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
+      "apiVersion": "2024-05-01",
+      "name": "[parameters('aksName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "dnsPrefix": "[parameters('dnsPrefix')]",
+        "enableRBAC": true,
+        "agentPoolProfiles": [
+          {
+            "name": "systempool",
+            "mode": "System",
+            "count": "[parameters('nodeCount')]",
+            "vmSize": "[parameters('vmSize')]",
+            "osType": "Linux",
+            "osSKU": "Ubuntu",
+            "type": "VirtualMachineScaleSets",
+            "enableAutoScaling": false
+          }
+        ],
+        "networkProfile": {
+          "networkPlugin": "azure",
+          "loadBalancerSku": "standard",
+          "outboundType": "loadBalancer"
+        }
+      }
+    }
+  ]
+}
