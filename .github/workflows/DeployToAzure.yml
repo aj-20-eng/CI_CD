@@ -1,17 +1,26 @@
-name: Deploy AKS Cluster (Manual)
+name: Deploy AKS Cluster (Self-Service)
 
 on:
-  workflow_dispatch:   # 👈 Only manual trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      rgName:
+        description: "Resource Group Name"
+        required: true
+        default: "rg-aks-demo"
+      aksName:
+        description: "AKS Cluster Name"
+        required: true
+        default: "demo-aks-poc1"
+      location:
+        description: "Azure Region"
+        required: true
+        default: "eastus"
 
 permissions:
   id-token: write
   contents: read
 
 env:
-  RG_NAME: rg-aks-demo
-  LOCATION: eastus
-  AKS_NAME: demo-aks-poc1
-
   AZURE_CLIENT_ID: "535791e2-810d-4282-9306-5c766dc8ede3"
   AZURE_TENANT_ID: "4a9d889e-4601-47a2-b372-45d4a2ea8d05"
   AZURE_SUBSCRIPTION_ID: "053a9f3d-903a-4386-aa02-6f75899c82d2"
@@ -24,7 +33,7 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v4
 
-    # ✅ OIDC Login
+    # 🔐 OIDC Login
     - name: Azure Login via OIDC
       uses: azure/login@v2
       with:
@@ -32,13 +41,27 @@ jobs:
         tenant-id: ${{ env.AZURE_TENANT_ID }}
         subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Create Resource Group
+    # 🧠 Smart RG Logic
+    - name: Check or Create Resource Group
       run: |
-        az group create --name $RG_NAME --location $LOCATION
+        RG_NAME="${{ github.event.inputs.rgName }}"
+        LOCATION="${{ github.event.inputs.location }}"
 
+        echo "Checking if RG $RG_NAME exists..."
+
+        if az group show --name "$RG_NAME" >/dev/null 2>&1; then
+          echo "Resource Group $RG_NAME already exists."
+        else
+          echo "Creating Resource Group $RG_NAME..."
+          az group create --name "$RG_NAME" --location "$LOCATION"
+        fi
+
+    # 🚀 Deploy AKS
     - name: Deploy AKS using Bicep
       run: |
         az deployment group create \
-          --resource-group $RG_NAME \
+          --resource-group ${{ github.event.inputs.rgName }} \
           --template-file AKS/aks.bicep \
-          --parameters aksName=$AKS_NAME
+          --parameters aksName=${{ github.event.inputs.aksName }} \
+                      location=${{ github.event.inputs.location }} \
+                      rgName=${{ github.event.inputs.rgName }}
