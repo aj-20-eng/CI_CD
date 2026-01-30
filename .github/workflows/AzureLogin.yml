@@ -1,9 +1,9 @@
-name: OIDC Login Test
+name: OIDC Branch Login Test
 
 on:
-  workflow_dispatch:   # manual run button
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -15,22 +15,21 @@ env:
   AZURE_SUBSCRIPTION_ID: "053a9f3d-903a-4386-aa02-6f75899c82d2"
 
 jobs:
-  login-test:
+  test-login:
     runs-on: ubuntu-latest
-    environment: prod   # MUST match Entra federated credential
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Azure Login using OIDC
+    - name: Azure Login via OIDC
       uses: azure/login@v2
       with:
         client-id: ${{ env.AZURE_CLIENT_ID }}
         tenant-id: ${{ env.AZURE_TENANT_ID }}
         subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Show Azure Account
+    - name: Test Azure Access
       run: |
         az account show
         az group list
