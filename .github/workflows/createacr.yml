@@ -1,0 +1,71 @@
+name: Create ACR and Attach to AKS
+
+on:
+  workflow_dispatch:
+    inputs:
+      resourceGroup:
+        description: "Resource Group Name"
+        required: true
+        default: "rg-aks-demo"
+      aksName:
+        description: "AKS Cluster Name"
+        required: true
+        default: "demo-aks-poc1"
+      acrName:
+        description: "ACR Name (must be globally unique)"
+        required: true
+        default: "myplatformacr123"
+      location:
+        description: "Azure Region"
+        required: true
+        default: "eastus"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_CLIENT_ID: "535791e2-810d-4282-9306-5c766dc8ede3"
+  AZURE_TENANT_ID: "4a9d889e-4601-47a2-b372-45d4a2ea8d05"
+  AZURE_SUBSCRIPTION_ID: "053a9f3d-903a-4386-aa02-6f75899c82d2"
+jobs:
+  create-acr-attach-aks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 🔐 Azure OIDC Login
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      # 📦 Create Resource Group (if not exists)
+      - name: Ensure Resource Group
+        run: |
+          az group create --name ${{ github.event.inputs.resourceGroup }} --location ${{ github.event.inputs.location }}
+
+      # 🐳 Create ACR (if not exists)
+      - name: Create ACR
+        run: |
+          if az acr show --name ${{ github.event.inputs.acrName }} >/dev/null 2>&1; then
+            echo "ACR already exists"
+          else
+            az acr create --resource-group ${{ github.event.inputs.resourceGroup }} --name ${{ github.event.inputs.acrName }} --sku Basic --location ${{ github.event.inputs.location }}
+          fi
+
+      # 🔗 Attach ACR to AKS
+      - name: Attach ACR to AKS
+        run: |
+          az aks update --resource-group ${{ github.event.inputs.resourceGroup }} --name ${{ github.event.inputs.aksName }} --attach-acr ${{ github.event.inputs.acrName }}
+
+      # ✅ Verify Role Assignment
+      - name: Verify ACR Attachment
+        run: |
+          ACR_ID=$(az acr show --name ${{ github.event.inputs.acrName }} --query id -o tsv)
+          KUBELET_ID=$(az aks show -g ${{ github.event.inputs.resourceGroup }} -n ${{ github.event.inputs.aksName }} --query identityProfile.kubeletidentity.objectId -o tsv)
+          az role assignment list --assignee $KUBELET_ID --scope $ACR_ID -o table
