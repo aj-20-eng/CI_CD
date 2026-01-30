@@ -1,1 +1,44 @@
+name: Deploy AKS Cluster (Manual)
 
+on:
+  workflow_dispatch:   # 👈 Only manual trigger from GitHub UI
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RG_NAME: rg-aks-demo
+  LOCATION: eastus
+  AKS_NAME: demo-aks-poc1
+
+  AZURE_CLIENT_ID: "535791e2-810d-4282-9306-5c766dc8ede3"
+  AZURE_TENANT_ID: "4a9d889e-4601-47a2-b372-45d4a2ea8d05"
+  AZURE_SUBSCRIPTION_ID: "053a9f3d-903a-4386-aa02-6f75899c82d2"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v4
+
+    # ✅ OIDC Login
+    - name: Azure Login via OIDC
+      uses: azure/login@v2
+      with:
+        client-id: ${{ env.AZURE_CLIENT_ID }}
+        tenant-id: ${{ env.AZURE_TENANT_ID }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Create Resource Group
+      run: |
+        az group create --name $RG_NAME --location $LOCATION
+
+    - name: Deploy AKS using Bicep
+      run: |
+        az deployment group create \
+          --resource-group $RG_NAME \
+          --template-file AKS/aks.bicep \
+          --parameters aksName=$AKS_NAME
