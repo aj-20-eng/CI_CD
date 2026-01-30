@@ -56,11 +56,16 @@ jobs:
           az group create --name "$RG_NAME" --location "$LOCATION"
         fi
 
-    # 🚀 Deploy AKS
-    - name: Deploy AKS using Bicep
+    # 🧱 Build Bicep to JSON (THIS FIXES YOUR ERRORS)
+    - name: Build Bicep to ARM JSON
+      run: |
+        az bicep build --file AKS/aks.bicep
+
+    # ✅ Deploy JSON Template
+    - name: Deploy AKS using ARM JSON
       run: |
         az deployment group create \
           --resource-group ${{ github.event.inputs.rgName }} \
-          --template-file AKS/aks.bicep \
+          --template-file AKS/aks.json \
           --parameters aksName=${{ github.event.inputs.aksName }} \
-                      location=${{ github.event.inputs.location }} 
+                      location=${{ github.event.inputs.location }}
